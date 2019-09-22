@@ -1,0 +1,16 @@
+{
+    "name": "SuperContact.HyperPrimitive",
+    "references": [
+        "SuperContact.Geometry",
+        "SuperContact.MathExpression",
+        "SuperContact.Common"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

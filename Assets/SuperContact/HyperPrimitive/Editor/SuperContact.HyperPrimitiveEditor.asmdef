@@ -1,0 +1,17 @@
+{
+    "name": "SuperContact.HyperPrimitiveEditor",
+    "references": [
+        "SuperContact.HyperPrimitive",
+        "SuperContact.Geometry"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

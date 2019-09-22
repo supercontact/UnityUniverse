@@ -1,0 +1,16 @@
+{
+    "name": "SuperContact.ConsoleUI",
+    "references": [
+        "SuperContact.Scripting"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}
