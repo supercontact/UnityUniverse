@@ -397,7 +397,7 @@ public class Geometry {
     }
 
     public virtual Halfedge SplitFace(Vertex v1, Vertex v2) {
-        Face oldFace = v1.edges.Select(e => e.face).Intersect(v2.edges.Select(e => e.face)).Single();
+        Face oldFace = v1.edges.Where(e => !e.isBoundary).Select(e => e.face).Intersect(v2.edges.Where(e => !e.isBoundary).Select(e => e.face)).Single();
         Face newFace = new Face();
         Halfedge newEdge1 = new Halfedge();
         Halfedge newEdge2 = new Halfedge();

@@ -34,6 +34,7 @@ public class MineFieldModel {
 
         public bool isClickable => state == TileState.Undiscovered || state == TileState.Marked;
         public bool isPressed => field.pressedTiles.Contains(this);
+        public bool isHighlighted => field.highlightedTiles.Contains(this);
         public bool isOpened => state == TileState.Discovered || state == TileState.Exploded || state == TileState.MineRevealed || state == TileState.WronglyFlagged;
 
         public List<Tile> adjacentTiles => face.edges
@@ -60,6 +61,7 @@ public class MineFieldModel {
     public RenderGeometry geometry;
     public Dictionary<Face, Tile> tiles = new Dictionary<Face, Tile>();
     public HashSet<Tile> pressedTiles = new HashSet<Tile>();
+    public HashSet<Tile> highlightedTiles = new HashSet<Tile>();
 
     public bool hasGeneratedMine { get; private set; }
     public bool hasWon { get; private set; }
@@ -85,6 +87,7 @@ public class MineFieldModel {
     public void Reset() {
         tiles.Values.ForEach(t => t.Reset());
         pressedTiles.Clear();
+        highlightedTiles.Clear();
         hasGeneratedMine = false;
         hasLost = false;
         hasWon = false;
@@ -105,24 +108,36 @@ public class MineFieldModel {
         tiles.Values.Select(t => t.hasMine = false);
     }
 
-    public void Press(Tile tile, bool extended) {
+    public void Press(Tile tile, bool isDoublePress) {
         var oldPressedTiles = new HashSet<Tile>(pressedTiles);
+        var oldHighlightedTiles = new HashSet<Tile>(highlightedTiles);
         pressedTiles.Clear();
+        highlightedTiles.Clear();
 
         if (tile.isClickable) {
             pressedTiles.Add(tile);
         }
-        if (extended) {
+        if (isDoublePress) {
             pressedTiles.UnionWith(tile.adjacentTiles.Where(t => t.isClickable));
+            highlightedTiles.UnionWith(tile.adjacentTiles.Where(t => t.state == TileState.Flagged));
+            if (tile.state == TileState.Discovered || tile.state == TileState.Flagged) {
+                highlightedTiles.Add(tile);
+            }
         }
         pressedTiles.Except(oldPressedTiles).ForEach(t => onTileStateChanged?.Invoke(t));
         oldPressedTiles.Except(pressedTiles).ForEach(t => onTileStateChanged?.Invoke(t));
+        highlightedTiles.Except(oldHighlightedTiles).ForEach(t => onTileStateChanged?.Invoke(t));
+        oldHighlightedTiles.Except(highlightedTiles).ForEach(t => onTileStateChanged?.Invoke(t));
     }
 
     public void Unpress() {
         var oldPressedTiles = new List<Tile>(pressedTiles);
         pressedTiles.Clear();
         oldPressedTiles.ForEach(t => onTileStateChanged?.Invoke(t));
+
+        var oldHighlightedTiles = new List<Tile>(highlightedTiles);
+        highlightedTiles.Clear();
+        oldHighlightedTiles.ForEach(t => onTileStateChanged?.Invoke(t));
     }
 
     public void Open(Tile tile) {

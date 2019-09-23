@@ -13,7 +13,7 @@ public class MineSweeperGame : MonoBehaviour {
         SetUpLevels();
 
         string toPlay = "1-1";
-        MineFieldController.instance.InitField(levels[toPlay].geometry, levels[toPlay].numberOfMines);
+        MineFieldControl.instance.InitField(levels[toPlay].geometry, levels[toPlay].numberOfMines);
     }
 
     int lastNumber = 0;
@@ -25,7 +25,7 @@ public class MineSweeperGame : MonoBehaviour {
                 } else {
                     string levelToPlay = $"{lastNumber}-{i}";
                     if (levels.ContainsKey(levelToPlay)) {
-                        MineFieldController.instance.InitField(levels[levelToPlay].geometry, levels[levelToPlay].numberOfMines);
+                        MineFieldControl.instance.InitField(levels[levelToPlay].geometry, levels[levelToPlay].numberOfMines);
                     }
                     lastNumber = 0;
                 }
@@ -42,13 +42,26 @@ public class MineSweeperGame : MonoBehaviour {
         levels["1-2"] = new MineSweeperLevel(PolyhedronGeometries.CreateCubeGeometry(Vector3.one * TILE_SIZE * 5, new[] { 5, 5, 5 }), 25);
         levels["1-3"] = new MineSweeperLevel(PolyhedronGeometries.CreateCubeGeometry(Vector3.one * TILE_SIZE * 6, new[] { 6, 6, 6 }), 40);
 
-        var cube = new StructureGeometry(PolyhedronGeometries.CreateCubeGeometry(Vector3.one * TILE_SIZE * 6, new[] { 1, 1, 1 }));
-        cube.faces.ForEach(f => cube.SetFaceComponent(f, SpecialSurfaceComponentGeometries.CreateDiamondCenterCrossSplitSquareGeometry(1, 1, 3), true));
+        StructureGeometry cube;
+        cube = new StructureGeometry(PolyhedronGeometries.CreateCubeGeometry(Vector3.one * TILE_SIZE * 6, new[] { 1, 1, 1 }));
+        cube.faces.ForEach(f => cube.SetFaceComponent(f, SpecialSurfaceComponentGeometries.CreateDiamondCenterCrossSplitSquareGeometry(1, 1, 3, 3), true));
         levels["1-4"] = new MineSweeperLevel(cube.Build(), 54);
 
-        var cube2 = new StructureGeometry(PolyhedronGeometries.CreateCubeGeometry(Vector3.one * TILE_SIZE * 6, new[] { 1, 1, 1 }));
-        cube2.faces.ForEach(f => cube2.SetFaceComponent(f, SpecialSurfaceComponentGeometries.CreatePantagonSquareGeometry(1, 1, 4, 0.4f), true));
-        levels["1-5"] = new MineSweeperLevel(cube2.Build(), 35);
+        cube = new StructureGeometry(PolyhedronGeometries.CreateCubeGeometry(Vector3.one * TILE_SIZE * 6, new[] { 1, 1, 1 }));
+        cube.faces.ForEach(f => cube.SetFaceComponent(f, SpecialSurfaceComponentGeometries.CreateDiamondCenterOctaSplitSquareGeometry(1, 1, 3, 3), true));
+        levels["1-5"] = new MineSweeperLevel(cube.Build(), 54);
+
+        cube = new StructureGeometry(PolyhedronGeometries.CreateCubeGeometry(Vector3.one * TILE_SIZE * 6, new[] { 1, 1, 1 }));
+        cube.faces.ForEach(f => cube.SetFaceComponent(f, SpecialSurfaceComponentGeometries.CreatePantagonSquareGeometry(1, 1, 4, 4, 0.4f), true));
+        levels["1-6"] = new MineSweeperLevel(cube.Build(), 35);
+
+        cube = new StructureGeometry(PolyhedronGeometries.CreateCubeGeometry(Vector3.one * TILE_SIZE * 6, new[] { 1, 1, 1 }));
+        cube.faces.ForEach(f => cube.SetFaceComponent(f, SpecialSurfaceComponentGeometries.CreateAlternatingDiagonalSplitSquareGeometry(1, 1, 5, 5), true));
+        levels["1-7"] = new MineSweeperLevel(cube.Build(), 50);
+
+        cube = new StructureGeometry(PolyhedronGeometries.CreateCubeGeometry(Vector3.one * TILE_SIZE * 6, new[] { 1, 1, 1 }));
+        cube.faces.ForEach(f => cube.SetFaceComponent(f, SpecialSurfaceComponentGeometries.CreateXSplitSquareGeometry(1, 1, 4, 4, 0.05f), true));
+        levels["1-8"] = new MineSweeperLevel(cube.Build(), 64);
 
         var plus = new StructureGeometry(PolyhedronGeometries.CreateCubeStarGeometry(TILE_SIZE * 2, 2, 1));
         plus.faces.ForEach(f => plus.SetFaceComponent(f, SurfaceComponentGeometries.CreatePlaneGeometry(1, 1, 2, 2), true));

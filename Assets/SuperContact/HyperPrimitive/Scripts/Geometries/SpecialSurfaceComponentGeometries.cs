@@ -37,6 +37,42 @@ public static class SpecialSurfaceComponentGeometries {
         return geometry;
     }
 
+    public static SurfaceComponentGeometry CreateAlternatingDiagonalSplitSquareGeometry(
+            float sizeX, float sizeZ, int segmentX, int segmentZ, int surfaceGroup = 0, RenderGeometry.FaceType faceType = RenderGeometry.FaceType.Polygonal) {
+        var geometry = SurfaceComponentGeometries.CreatePlaneGeometry(sizeX, sizeZ, segmentX, segmentZ, surfaceGroup, faceType);
+
+        foreach (Face face in new List<Face>(geometry.faces)) {
+            List<Halfedge> edges = face.edges;
+            Vector3 facePoint = edges[0].prev.vertex.p;
+            int x = Mathf.RoundToInt((facePoint.x - sizeX / 2) / (sizeX / segmentX));
+            int z = Mathf.RoundToInt((facePoint.z - sizeZ / 2) / (sizeZ / segmentZ));
+            if ((x + z) % 2 == 0) {
+                geometry.SplitFace(edges[0].vertex, edges[2].vertex);
+            } else {
+                geometry.SplitFace(edges[1].vertex, edges[3].vertex);
+            }
+        }
+        return geometry;
+    }
+
+    public static SurfaceComponentGeometry CreateXSplitSquareGeometry(
+            float sizeX, float sizeZ, int segmentX, int segmentZ, float spikeHeight = 0, int surfaceGroup = 0, RenderGeometry.FaceType faceType = RenderGeometry.FaceType.Polygonal) {
+        var planeGeometry = SurfaceComponentGeometries.CreatePlaneGeometry(sizeX, sizeZ, segmentX, segmentZ);
+        List<Vertex> corners = planeGeometry.corners;
+
+        var structure = new StructureGeometry(planeGeometry);
+        var coneHeight = spikeHeight / (sizeZ / segmentZ) * Mathf.Sqrt(2);
+        structure.faces.ForEach(f => {
+            var component = SurfaceComponentGeometries.CreateConeCapGeometry(1, coneHeight, 4, 1, 0, surfaceGroup, faceType);
+            component.SplitBoundaries();
+            structure.SetFaceComponent(f, component, true);
+        });
+        var geometry = new SurfaceComponentGeometry(structure.Build());
+        geometry.DefineBoundaries(corners.Select(structure.GetBuiltVertex).ToArray());
+
+        return geometry;
+    }
+
     public static SurfaceComponentGeometry CreateSingleDiamondCenterCrossSplitSquareGeometry(
             float sizeX, float sizeZ, float diamondRatio = 0.6f, int surfaceGroup = 0, RenderGeometry.FaceType faceType = RenderGeometry.FaceType.Polygonal) {
         var geometry = new SurfaceComponentGeometry();
@@ -65,8 +101,8 @@ public static class SpecialSurfaceComponentGeometries {
     }
 
     public static SurfaceComponentGeometry CreateDiamondCenterCrossSplitSquareGeometry(
-             float sizeX, float sizeZ, int segment, float diamondRatio = 0.6f, int surfaceGroup = 0, RenderGeometry.FaceType faceType = RenderGeometry.FaceType.Polygonal) {
-        SurfaceComponentGeometry planeGeometry = SurfaceComponentGeometries.CreatePlaneGeometry(sizeX, sizeZ, segment, segment);
+             float sizeX, float sizeZ, int segmentX, int segmentZ, float diamondRatio = 0.6f, int surfaceGroup = 0, RenderGeometry.FaceType faceType = RenderGeometry.FaceType.Polygonal) {
+        SurfaceComponentGeometry planeGeometry = SurfaceComponentGeometries.CreatePlaneGeometry(sizeX, sizeZ, segmentX, segmentZ);
         List<Vertex> corners = planeGeometry.corners;
 
         var structure = new StructureGeometry(planeGeometry);
@@ -77,16 +113,64 @@ public static class SpecialSurfaceComponentGeometries {
         return geometry;
     }
 
-    public static SurfaceComponentGeometry CreatePantagonSquareGeometry(
-            float sizeX, float sizeZ, int segment, float pantagonRatio = 0.3f, int surfaceGroup = 0, RenderGeometry.FaceType faceType = RenderGeometry.FaceType.Polygonal) {
-        SurfaceComponentGeometry planeGeometry = SurfaceComponentGeometries.CreatePlaneGeometry(sizeX, sizeZ, segment * 2, segment * 2, surfaceGroup, faceType);
-        var originalVertexList = new List<Vertex>(planeGeometry.vertices);
-        Vertex corner(int x, int z) => originalVertexList[x * (segment * 2 + 1) + z];
+    public static SurfaceComponentGeometry CreateSingleDiamondCenterOctaSplitSquareGeometry(
+           float sizeX, float sizeZ, float diamondRatio = 0.6f, int surfaceGroup = 0, RenderGeometry.FaceType faceType = RenderGeometry.FaceType.Polygonal) {
+        var geometry = new SurfaceComponentGeometry();
 
-        float deltaX = sizeX / (segment * 2) * pantagonRatio;
-        float deltaZ = sizeZ / (segment * 2) * pantagonRatio;
-        for (int x = 1; x < segment * 2; x++) {
-            for (int z = 1; z < segment * 2; z++) {
+        var outerRing = new Vertex[] {
+            geometry.CreateVertex(new Vector3(0, 0, -sizeZ / 2)),
+            geometry.CreateVertex(new Vector3(-sizeX / 2, 0, -sizeZ / 2)),
+            geometry.CreateVertex(new Vector3(-sizeX / 2, 0, 0)),
+            geometry.CreateVertex(new Vector3(-sizeX / 2, 0, sizeZ / 2)),
+            geometry.CreateVertex(new Vector3(0, 0, sizeZ / 2)),
+            geometry.CreateVertex(new Vector3(sizeX / 2, 0, sizeZ / 2)),
+            geometry.CreateVertex(new Vector3(sizeX / 2, 0, 0)),
+            geometry.CreateVertex(new Vector3(sizeX / 2, 0, -sizeZ / 2))
+        };
+        var innerRing = outerRing.Select((vertex, index) => geometry.CreateVertex(vertex.p * (index % 2 == 0 ? diamondRatio : diamondRatio / 2))).ToArray();
+
+        for (int i = 0; i < 8; i++) {
+            geometry.CreateFace(outerRing[i], outerRing[(i + 1) % 8], innerRing[(i + 1) % 8], innerRing[i]);
+        }
+        geometry.CreateFace(innerRing);
+
+        geometry.DefineBoundaries(outerRing[1], outerRing[3], outerRing[5], outerRing[7]);
+        return geometry;
+    }
+
+    public static SurfaceComponentGeometry CreateDiamondCenterOctaSplitSquareGeometry(
+         float sizeX, float sizeZ, int segmentX, int segmentZ, float diamondRatio = 0.6f, int surfaceGroup = 0, RenderGeometry.FaceType faceType = RenderGeometry.FaceType.Polygonal) {
+        SurfaceComponentGeometry planeGeometry = SurfaceComponentGeometries.CreatePlaneGeometry(sizeX, sizeZ, segmentX, segmentZ);
+        List<Vertex> corners = planeGeometry.corners;
+
+        var structure = new StructureGeometry(planeGeometry);
+        var edgesToMerge = new List<Halfedge>();
+        structure.faces.ForEach(f => {
+            var component = CreateSingleDiamondCenterOctaSplitSquareGeometry(1, 1, diamondRatio, surfaceGroup, faceType);
+            edgesToMerge.AddRange(component.boundaries.SelectMany(b => b).Select(e => e.opposite));
+            structure.SetFaceComponent(f, component, true);
+        });
+        var geometry = new SurfaceComponentGeometry(structure.Build());
+        foreach (Halfedge edge in edgesToMerge) {
+            if (edge.index >= 0 && !edge.opposite.isBoundary) {
+                geometry.MergeFaces(edge);
+            }
+        }
+        geometry.DefineBoundaries(corners.Select(structure.GetBuiltVertex).ToArray());
+
+        return geometry;
+    }
+
+    public static SurfaceComponentGeometry CreatePantagonSquareGeometry(
+            float sizeX, float sizeZ, int segmentX, int segmentZ, float pantagonRatio = 0.3f, int surfaceGroup = 0, RenderGeometry.FaceType faceType = RenderGeometry.FaceType.Polygonal) {
+        SurfaceComponentGeometry planeGeometry = SurfaceComponentGeometries.CreatePlaneGeometry(sizeX, sizeZ, segmentX * 2, segmentZ * 2, surfaceGroup, faceType);
+        var originalVertexList = new List<Vertex>(planeGeometry.vertices);
+        Vertex corner(int x, int z) => originalVertexList[x * (segmentZ * 2 + 1) + z];
+
+        float deltaX = sizeX / (segmentX * 2) * pantagonRatio;
+        float deltaZ = sizeZ / (segmentZ * 2) * pantagonRatio;
+        for (int x = 1; x < segmentX * 2; x++) {
+            for (int z = 1; z < segmentZ * 2; z++) {
                 if (x % 2 == 0 && z % 2 == 1) {
                     corner(x, z).p += deltaX * ((x + z) % 4 == 3 ? Vector3.left : Vector3.right);
                 } else if (x % 2 == 1 && z % 2 == 0) {
@@ -94,8 +178,8 @@ public static class SpecialSurfaceComponentGeometries {
                 }
             }
         }
-        for (int x = 0; x < segment; x++) {
-            for (int z = 0; z < segment; z++) {
+        for (int x = 0; x < segmentX; x++) {
+            for (int z = 0; z < segmentZ; z++) {
                 if ((x + z) % 2 == 0) {
                     planeGeometry.MergeFaces(planeGeometry.FindHalfedge(corner(x * 2 + 1, z * 2 + 1), corner(x * 2 + 1, z * 2)));
                     planeGeometry.MergeFaces(planeGeometry.FindHalfedge(corner(x * 2 + 1, z * 2 + 1), corner(x * 2 + 1, z * 2 + 2)));

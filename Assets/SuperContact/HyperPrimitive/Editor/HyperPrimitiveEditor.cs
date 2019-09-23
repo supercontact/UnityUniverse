@@ -289,6 +289,7 @@ public class HyperPrimitiveEditor : Editor {
 
         if (GUILayout.Button("Save mesh as asset")) {
             SaveMeshAsAsset();
+            meshSaved.boolValue = true;
         }
 
         if (!serializedObject.isEditingMultipleObjects) {
@@ -300,6 +301,7 @@ public class HyperPrimitiveEditor : Editor {
             EditorGUILayout.LabelField("Geometry polygon count = " + geometry.faces.Count);
             EditorGUILayout.LabelField("Mesh vertex count = " + mesh.vertexCount);
             EditorGUILayout.LabelField("Mesh triangle count = " + mesh.triangles.Length / 3);
+            EditorGUILayout.LabelField("Mesh saved? " + meshSaved.boolValue);
         }
 
         serializedObject.ApplyModifiedProperties();
@@ -313,7 +315,6 @@ public class HyperPrimitiveEditor : Editor {
         }
         foreach (HyperPrimitive obj in objects) {
             AssetDatabase.CreateAsset(obj.GetComponent<MeshFilter>().sharedMesh, AssetDatabase.GenerateUniqueAssetPath($"Assets/PrimitiveExports/{obj.gameObject.name}.asset"));
-            obj.meshSaved = true;
         }
         AssetDatabase.SaveAssets();
     }

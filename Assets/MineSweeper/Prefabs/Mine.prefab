@@ -266,6 +266,139 @@ MonoBehaviour:
   globalSurfaceType: 0
   meshSaved: 1
   message: 
+--- !u!1 &1372185789164053161
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8158698811730498742}
+  - component: {fileID: 8217537196699834696}
+  - component: {fileID: 9003943710378354837}
+  - component: {fileID: 2625133039296795979}
+  m_Layer: 0
+  m_Name: MineLock
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &8158698811730498742
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372185789164053161}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: -0, z: 0.589}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 7089964936894858502}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+--- !u!33 &8217537196699834696
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372185789164053161}
+  m_Mesh: {fileID: 4300000, guid: 23a7540b9a6d8f647abeb107f2525414, type: 2}
+--- !u!23 &9003943710378354837
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372185789164053161}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: e946395dbc440934cbb5f8f9546df74a, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 1
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 0
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+--- !u!114 &2625133039296795979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1372185789164053161}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c53e5b5eb63a9248ab6a7092e9b41dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  type: 104
+  sizeX: 1
+  sizeY: 1
+  sizeZ: 1
+  sizeR: 0.25
+  sizeR2: 0.05
+  extraSizeX: 0
+  extraSizeX2: 0
+  extraSizeY: 0
+  segmentX: 1
+  segmentY: 1
+  segmentZ: 1
+  segmentP: 18
+  segmentP2: 8
+  offset: 0
+  extrusion: 1
+  ratio: 0.5
+  hollowRatio: 0
+  cutTop: 0
+  cutBottom: 0
+  cutAngle: 0
+  cutEdge: 0
+  angle: 360
+  angleOffset: 0
+  curvature: 0
+  smooth: 1
+  smoothX: 1
+  smoothZ: 1
+  smoothH: 1
+  smoothV: 1
+  xyz: 1
+  xyZ: 1
+  xYz: 1
+  xYZ: 1
+  Xyz: 1
+  XyZ: 1
+  XYz: 1
+  XYZ: 1
+  rampType: 1
+  surfaceFacing: 0
+  globalSurfaceType: 0
+  meshSaved: 1
+  message: 
 --- !u!1 &2497439564355421440
 GameObject:
   m_ObjectHideFlags: 0
@@ -275,6 +408,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7089964936894858502}
+  - component: {fileID: 114677077403391360}
+  - component: {fileID: 6091681434597672419}
   m_Layer: 0
   m_Name: Mine
   m_TagString: Untagged
@@ -296,9 +431,41 @@ Transform:
   - {fileID: 1683336924344889883}
   - {fileID: 2668169829679588483}
   - {fileID: 2876728912661668974}
+  - {fileID: 8158698811730498742}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114677077403391360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2497439564355421440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cdfa35fb4488984da3f4a5d6b35e20a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  parent: {fileID: 0}
+  explosionPrefab: {fileID: 8953886229147353247, guid: 5dce17db4cb51994aab643cc5303b402,
+    type: 3}
+  mineLock: {fileID: 1372185789164053161}
+--- !u!114 &6091681434597672419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2497439564355421440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f14ebfc862b0fed4f9a24887db87bca2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  blinkDuration: 0.05
+  blinkColor: {r: 1, g: 1, b: 1, a: 1}
+  blinkColorIntensity: 1.5
 --- !u!1 &6546019861906210175
 GameObject:
   m_ObjectHideFlags: 0
