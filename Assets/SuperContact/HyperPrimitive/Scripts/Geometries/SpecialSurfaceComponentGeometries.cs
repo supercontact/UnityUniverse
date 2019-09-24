@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System;
 using UnityEngine;
 
 public static class SpecialSurfaceComponentGeometries {
@@ -35,6 +36,35 @@ public static class SpecialSurfaceComponentGeometries {
         geometry.DefineBoundaries(corners.Select(structure.GetBuiltVertex).ToArray());
 
         return geometry;
+    }
+
+    public static SurfaceComponentGeometry CreateWallTiledTriangleGeometry(float sizeBase, float sizeHeight, float offsetTop, int segment, int surfaceGroup = 0, RenderGeometry.FaceType faceType = RenderGeometry.FaceType.Polygonal) {
+        SurfaceComponentGeometry triangleGeometry = SurfaceComponentGeometries.CreateTriangleGeometry(sizeBase, sizeHeight, offsetTop, segment, true);
+        List<Vertex> corners = triangleGeometry.corners;
+
+        var newVertices = new Dictionary<Vector2, Vertex>();
+        Halfedge currentEdge = triangleGeometry.FindHalfedge(corners[2], corners[0]);
+        Vector3 delta = -currentEdge.vector / segment / 2;
+        for (int i = 0; i < segment; i++) {
+            Halfedge nextEdge = currentEdge.next.next.opposite;
+            Vector3 leftPoint = currentEdge.vertex.p;
+            for (int j = 1; j < (segment - i) * 2; j++) {
+                if (i == 0 && j % 2 == 1) continue;
+                Vertex newVertex = triangleGeometry.SplitEdge(currentEdge);
+                newVertex.p = leftPoint + j * delta;
+                newVertices[Key(i, j)] = newVertex;
+            }
+            currentEdge = nextEdge;
+        }
+
+        for (int i = 0; i < segment - 1; i++) {
+            for (int j = 1; j < segment - i; j++) {
+                triangleGeometry.SplitFace(newVertices[Key(i, j * 2)], newVertices[Key(i + 1, j * 2 - 1)]);
+            }
+        }
+
+        triangleGeometry.DefineBoundaries(corners.ToArray());
+        return triangleGeometry;
     }
 
     public static SurfaceComponentGeometry CreateAlternatingDiagonalSplitSquareGeometry(
@@ -190,5 +220,22 @@ public static class SpecialSurfaceComponentGeometries {
             }
         }
         return planeGeometry;
+    }
+
+    public static SurfaceComponentGeometry CreateTrianglesCombinedRegularPolygonGeometry(float radius, int segmentP, Func<SurfaceComponentGeometry> triangleSurfaceComponentProvider) {
+        SurfaceComponentGeometry polygonGeometry = SurfaceComponentGeometries.CreateFanCapGeometry(radius, segmentP, 1);
+        polygonGeometry.SplitBoundaries();
+        List<Vertex> corners = polygonGeometry.corners;
+
+        var structure = new StructureGeometry(polygonGeometry);
+        structure.faces.ForEach(f => structure.SetFaceComponent(f, triangleSurfaceComponentProvider(), true));
+        var geometry = new SurfaceComponentGeometry(structure.Build());
+        geometry.DefineBoundaries(corners.Select(structure.GetBuiltVertex).ToArray());
+
+        return geometry;
+    }
+
+    private static Vector2 Key(int i, int j) {
+        return new Vector2(i, j);
     }
 }

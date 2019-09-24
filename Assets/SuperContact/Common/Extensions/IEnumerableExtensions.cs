@@ -15,6 +15,12 @@ public static class IEnumerableExtensions {
         }
     }
 
+    public static IEnumerable<T> Rotate<T>(this IEnumerable<T> objects, int rotateAmount) {
+        int count = objects.Count();
+        rotateAmount = rotateAmount.Mod(count);
+        return objects.Skip(count - rotateAmount).Concat(objects.Take(count - rotateAmount));
+    }
+
     public static Vector3 Sum(this IEnumerable<Vector3> vectors) {
         return vectors.Aggregate(Vector3.zero, (v1, v2) => v1 + v2);
     }

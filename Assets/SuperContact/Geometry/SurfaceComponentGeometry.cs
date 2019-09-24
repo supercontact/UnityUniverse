@@ -15,7 +15,7 @@ public class SurfaceComponentGeometry : RenderGeometry {
         CombineGeometry(geometry);
     }
 
-    public void DefineBoundaries(params Vertex[] corners) {
+    public SurfaceComponentGeometry DefineBoundaries(params Vertex[] corners) {
         boundaries.Clear();
         Halfedge currentEdge = corners[0].edges.Find(e => e.isBoundary);
         if (currentEdge == null) {
@@ -33,13 +33,20 @@ public class SurfaceComponentGeometry : RenderGeometry {
             } while (currentEdge.vertex != end);
             boundaries.Add(currentBoundaries);
         }
+        return this;
     }
 
-    public void SplitBoundaries() {
+    public SurfaceComponentGeometry SplitBoundaries() {
         boundaries = boundaries.SelectMany(boundary => boundary).Select(e => new List<Halfedge> { e }).ToList();
+        return this;
     }
 
-    public void CombineBoundaries(params int[] boundarySizes) {
+    public SurfaceComponentGeometry ShiftBoundaries(int shiftAmount) {
+        boundaries = boundaries.Rotate(shiftAmount).ToList();
+        return this;
+    }
+
+    public SurfaceComponentGeometry CombineBoundaries(params int[] boundarySizes) {
         var newBoundaries = new List<List<Halfedge>>();
         int current = 0;
         foreach (int size in boundarySizes) {
@@ -50,9 +57,10 @@ public class SurfaceComponentGeometry : RenderGeometry {
             newBoundaries.Add(newBoundary);
         }
         boundaries = newBoundaries;
+        return this;
     }
 
-    public void AutoAdjust(Vertex[] corners) {
+    public SurfaceComponentGeometry AutoAdjust(Vertex[] corners) {
         var locals = new List<Vector3>();
         var targets = new List<Vector3>();
         for (int i = 0; i < corners.Length; i++) {
@@ -75,5 +83,6 @@ public class SurfaceComponentGeometry : RenderGeometry {
             transform = MatrixUtil.PointToPointTransform(locals[0], locals[1], locals[2], targets[0], targets[1], targets[2]);
         }
         ApplyLinearTransform(transform);
+        return this;
     }
 }

@@ -472,10 +472,37 @@ public class Geometry {
         Halfedge oldOppo = edge.opposite;
         Halfedge newEdge = new Halfedge();
         Halfedge newOppo = new Halfedge();
-        Vertex vertex = CreateVertex(edge.midPoint);
+        Vertex newVertex = CreateVertex(edge.midPoint);
 
-        // TODO(ruoqi): To be implemented.
-        return null;
+        newEdge.vertex = oldEdge.vertex;
+        newOppo.vertex = oldOppo.vertex;
+        oldEdge.vertex = newVertex;
+        oldOppo.vertex = newVertex;
+
+        newVertex.edge = oldEdge;
+        newEdge.vertex.edge = newEdge;
+        newOppo.vertex.edge = newOppo;
+
+        newEdge.face = oldEdge.face;
+        newOppo.face = oldOppo.face;
+
+        newEdge.next = oldEdge.next;
+        newOppo.next = oldOppo.next;
+        newEdge.prev = oldEdge;
+        newOppo.prev = oldOppo;
+        newEdge.opposite = oldOppo;
+        newOppo.opposite = oldEdge;
+        oldEdge.next.prev = newEdge;
+        oldOppo.next.prev = newOppo;
+        oldEdge.next = newEdge;
+        oldOppo.next = newOppo;
+        oldEdge.opposite = newOppo;
+        oldOppo.opposite = newEdge;
+
+        AddHalfedgeToList(newEdge);
+        AddHalfedgeToList(newOppo);
+
+        return newVertex;
     }
 
     public void ApplyOffset(Vector3 offset) {
