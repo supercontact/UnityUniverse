@@ -17,85 +17,83 @@ public class ObserveCamera : MonoBehaviour {
 
 	public GameObject target;
 	public CameraCenterScript center;
-    public bool directMouseInput = true;
+    public string focusName = "Default";
+    public bool allowRotating = true;
     public bool allowPanning = true;
     public bool allowZooming = true;
-	public Vector3 targetOffset = Vector3.zero;
 	public float mouseRotationControlDistance = 500;
 	public float mouseRotationFactor = 1;
 	public float mousePanningFactor = 1;
 	public float mouseScrollZoomingFactor = 0.1f;
 	public float mouseScrollMovingFactor = 0.1f;
+    public float mouseScrollMaxTickPerFrame = 2;
 	public float smoothT = 0.1f;
     public bool adaptiveCrosshairSize = true;
     public float adaptiveCrosshairSizeMultiplier = 0.25f;
 
-	private Camera cam;
+    public bool autoSetTargetDistanceAndRotation = true;
+    public float targetDistance;
+    public Quaternion targetRotation;
+    public Vector3 targetOffset = Vector3.zero;
 
-	private Vector3 offset = Vector3.zero;
-	private float targetDistance;
+    private Camera cam;
+    private FocusableInput input;
+
 	private float distance;
-	private Quaternion targetRotation;
-
-	private Vector3 prevMousePos;
-	private int mouseMode = -1;
-
-	private bool clicking;
+    private Vector3 offset = Vector3.zero;
+    private Vector3 prevMousePos;
+	private int mouseMode = -1;  // 0 = rotation mode, 1 = panning mode.
 
     private void Awake() {
         cam = GetComponent<Camera>();
+        input = new FocusableInput(focusName);
     }
 
     private void Start () {
-		targetDistance = (target.transform.position - transform.position).magnitude;
-        distance = targetDistance;
-		targetRotation = Quaternion.LookRotation(target.transform.position - transform.position);
-		transform.rotation = targetRotation;
+        distance = (target.transform.position - transform.position).magnitude;
+        transform.rotation = Quaternion.LookRotation(target.transform.position - transform.position);
+
+        if (autoSetTargetDistanceAndRotation) {
+            targetDistance = distance;
+            targetRotation = transform.rotation;
+        }
 	}
 
     private void Update () {
 		if (Time.unscaledDeltaTime != 0f) {
-            if ((directMouseInput && Input.GetMouseButtonDown(0)) || clicking) {
-                clicking = false;
-				prevMousePos = Input.mousePosition;
+            float mouseScrollAmount = Mathf.Clamp(input.mouseScrollDelta.y, -mouseScrollMaxTickPerFrame, mouseScrollMaxTickPerFrame);
+
+            if (allowRotating && input.GetMouseButtonDown(0)) {
 				mouseMode = 0;
 				center.Hide();
-			} else if (allowPanning && Input.GetMouseButtonDown(1)) {
-				prevMousePos = Input.mousePosition;
+			} else if (allowPanning && input.GetMouseButtonDown(1)) {
 				mouseMode = 1;
 				center.Show();
-			} else if (Input.GetMouseButton(0) && mouseMode == 0) {
+			} else if (allowRotating && input.GetMouseButton(0) && mouseMode == 0) {
 				// Rotate the camera.
 				Vector3 v1 = new Vector3(prevMousePos.x - Screen.width / 2, prevMousePos.y - Screen.height / 2, -mouseRotationControlDistance);
-				Vector3 v2 = new Vector3(Input.mousePosition.x - Screen.width / 2, Input.mousePosition.y - Screen.height / 2, -mouseRotationControlDistance);
-				Quaternion rot = Quaternion.Inverse(Quaternion.FromToRotation(v1, v2));
-				float angle;
-				Vector3 axis;
-				rot.ToAngleAxis(out angle, out axis);
-				rot = Quaternion.AngleAxis(angle * mouseRotationFactor, axis);
-				targetRotation = targetRotation * rot;
-				prevMousePos = Input.mousePosition;
-			} else if (allowPanning && Input.GetMouseButton(1) && mouseMode == 1) {
+				Vector3 v2 = new Vector3(input.mousePosition.x - Screen.width / 2, input.mousePosition.y - Screen.height / 2, -mouseRotationControlDistance);
+				Quaternion rotation = Quaternion.Inverse(Quaternion.FromToRotation(v1, v2));
+				rotation.ToAngleAxis(out float angle, out Vector3 axis);
+				rotation = Quaternion.AngleAxis(angle * mouseRotationFactor, axis);
+				targetRotation = targetRotation * rotation;
+			} else if (allowPanning && input.GetMouseButton(1) && mouseMode == 1) {
 				// Pan the camera.
 				float distancePixelRatio = (cam.ScreenToWorldPoint(new Vector3(1, 0, targetDistance)) - cam.ScreenToWorldPoint(new Vector3(0, 0, targetDistance))).magnitude * mousePanningFactor;
-				Vector3 move = new Vector3((prevMousePos.x - Input.mousePosition.x) * distancePixelRatio,
-				                           (prevMousePos.y - Input.mousePosition.y) * distancePixelRatio,
-				                           Input.mouseScrollDelta.y * targetDistance * mouseScrollMovingFactor);
+				Vector3 move = new Vector3((prevMousePos.x - input.mousePosition.x) * distancePixelRatio,
+				                           (prevMousePos.y - input.mousePosition.y) * distancePixelRatio,
+                                           mouseScrollAmount * targetDistance * mouseScrollMovingFactor);
 				targetOffset += targetRotation * move;
-				prevMousePos = Input.mousePosition;
 			} else {
 				mouseMode = -1;
-			}
+                center.Hide();
+            }
 
-			if (Input.GetMouseButtonUp(1)) {
-				center.Hide();
+			if (allowZooming && mouseMode != 1) {
+                // Zoom the camera.
+				targetDistance *= Mathf.Exp(-mouseScrollAmount * mouseScrollZoomingFactor);
 			}
-
-			if (allowZooming && !Input.GetMouseButton(1) || mouseMode != 1) {
-				// Zoom the camera.
-				targetDistance *= Mathf.Exp(- Input.mouseScrollDelta.y * mouseScrollZoomingFactor);
-			}
-			if (allowPanning && Input.GetMouseButtonDown(2)) {
+			if (allowPanning && input.GetMouseButtonDown(2)) {
 				// Reset the camera center position.
 				targetOffset = Vector3.zero;
 			}
@@ -109,14 +107,16 @@ public class ObserveCamera : MonoBehaviour {
             if (adaptiveCrosshairSize) {
                 center.transform.localScale = Vector3.one * distance * adaptiveCrosshairSizeMultiplier;
             }
-		}
+
+            prevMousePos = input.mousePosition;
+        }
 	}
 
-	public void OnClick(BaseEventData data) {
-        if (directMouseInput) {
-            throw new System.Exception("Direct mouse input mode is in use!");
-        }
-		PointerEventData pdata = (PointerEventData) data;
-		clicking = pdata.button == PointerEventData.InputButton.Left;
-	}
+    //public void OnClick(BaseEventData data) {
+    //    if (directMouseInput) {
+    //        throw new System.Exception("Direct mouse input mode is in use!");
+    //    }
+    //    PointerEventData pdata = (PointerEventData)data;
+    //    clicking = pdata.button == PointerEventData.InputButton.Left;
+    //}
 }

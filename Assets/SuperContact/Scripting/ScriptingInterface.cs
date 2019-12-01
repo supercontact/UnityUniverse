@@ -9,6 +9,8 @@ public abstract class ScriptingInterface {
     public delegate void ExceptionHandler(Exception exception);
     public event ExceptionHandler OnException;
 
+    public bool isAsync { get; set; } = false;
+
     public abstract Task SubmitCode(String name, String code);
     public abstract Task<object> Execute(String code, Boolean throwException);
 

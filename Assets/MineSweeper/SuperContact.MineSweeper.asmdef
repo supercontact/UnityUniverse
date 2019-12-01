@@ -1,0 +1,19 @@
+{
+    "name": "SuperContact.MineSweeper",
+    "references": [
+        "SuperContact.Common",
+        "SuperContact.Geometry",
+        "SuperContact.HyperPrimitive",
+        "SuperContact.Tools",
+        "SuperContact.ConsoleUI",
+        "SuperContact.Scripting"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

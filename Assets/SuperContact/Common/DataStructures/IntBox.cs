@@ -7,6 +7,11 @@ public struct IntBox {
     public IntVector3 min;
     public IntVector3 max;
 
+    public IntBox(IntVector3 size) {
+        min = IntVector3.zero;
+        max = size - IntVector3.one;
+    }
+
     public IntBox(IntVector3 min, IntVector3 max) {
         this.min = min;
         this.max = max;

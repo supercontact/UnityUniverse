@@ -19,6 +19,10 @@ public class Testing : MonoBehaviour {
         space = new OctreeSpace<Unit>(new Vector3(-5f, 0, -5f), new Vector3(5f, 10f, 5f), 5, 8, 4);
     }
 
+    private void OnDestroy() {
+        instance = null;
+    }
+
     private void Start() {
         //scriptingInterface = new CSharpScriptingInterface();
         //t = new TestEnvironment();

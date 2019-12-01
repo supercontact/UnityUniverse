@@ -1,7 +1,10 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Reflection;
 
 public class CSharpScriptingInterface : ScriptingInterface {
 
@@ -9,51 +12,58 @@ public class CSharpScriptingInterface : ScriptingInterface {
     private Boolean isExecuting = false;
 
     private object environment;
+    private ScriptOptions options = ScriptOptions.Default;
 
     public void SetEnvironment(object environment) {
         this.environment = environment;
     }
 
-    public override async Task<object> Execute(string code, bool throwException) {
-        if (isExecuting) {
-            SendLogError("Some code is still running!");
-            return null;
-        }
+    public void SetAssemblies(params Assembly[] assemblies) {
+        options = options.WithReferences(assemblies);
+    }
 
-        isExecuting = true;
-        if (state == null) {
-            await Init();
-        }
-        try {
-            state = await state.ContinueWithAsync(code);
-        } catch (Exception e) {
-            if (throwException) {
-                throw e;
-            }
-            SendException(e);
-            return null;
-        } finally {
-            isExecuting = false;
-        }
-        return state.ReturnValue;
+    public void SetImports(params string[] imports) {
+        options = options.WithImports(imports);
+    }
+
+    public override async Task<object> Execute(string code, bool throwException) {
+        return await Run(code, throwException, isAsync);
     }
 
     public override async Task SubmitCode(string name, string code) {
+        state = null;
+        await Run(code, false /* throwException */, isAsync);
+    }
+
+    private async Task<object> Run(string code, bool throwException, bool isAsync) {
         if (isExecuting) {
             SendLogError("Some code is still running!");
-            return;
+            return null;
         }
 
         isExecuting = true;
-        await Init();
-        isExecuting = false;
-    }
+        Task<ScriptState<object>> task;
 
-    private async Task Init(string initialCode = "") {
         try {
-            state = await CSharpScript.RunAsync(initialCode, globals: environment);
+            if (isAsync) {
+                task = Task.Run(async () => await (state == null ? CSharpScript.RunAsync(code, options, environment) : state.ContinueWithAsync(code)));
+            } else {
+                task = state == null ? CSharpScript.RunAsync(code, options, environment) : state.ContinueWithAsync(code);
+            }
+            await task;
         } catch (Exception e) {
-            SendException(e);
+            if (throwException) {
+                isExecuting = false;
+                throw e;
+            } else {
+                SendException(e);
+                return null;
+            }
+        } finally {
+            isExecuting = false;
         }
+
+        state = task.Result;
+        return state.ReturnValue;
     }
 }

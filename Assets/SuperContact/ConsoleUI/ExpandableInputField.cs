@@ -5,7 +5,15 @@ using UnityEngine.UI;
 
 public class ExpandableInputField : MonoBehaviour {
 
-    public void OnInputFieldChanged(string text) {
-        this.GetComponent<Text>().text = text;
+    public InputField innerInputField;
+
+    private Text text;
+
+    private void Awake() {
+        text = GetComponent<Text>();
+    }
+
+    public void OnInputFieldChanged() {
+        text.text = innerInputField.text;
     }
 }

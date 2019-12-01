@@ -4,15 +4,32 @@ using UnityEngine;
 
 public class ShowHideEditor : MonoBehaviour {
 
+    public GameObject editorUI;
     public GameObject showButton;
+    public bool showWithBacktick = true;
 
     public void HideEditor() {
-        gameObject.SetActive(false);
-        showButton.SetActive(true);
+        SetEditorVisibility(false);
     }
 
     public void ShowEditor() {
-        gameObject.SetActive(true);
-        showButton.SetActive(false);
+        SetEditorVisibility(true);
+    }
+
+    public void ToggleEditor() {
+        SetEditorVisibility(!editorUI.activeSelf);
+    }
+
+    private void SetEditorVisibility(bool isVisible) {
+        editorUI.SetActive(isVisible);
+        if (showButton != null) {
+            showButton.SetActive(!isVisible);
+        }
+    }
+
+    private void Update() {
+        if (showWithBacktick && Input.GetKeyDown(KeyCode.BackQuote)) {
+            ToggleEditor();
+        }
     }
 }

@@ -29,15 +29,16 @@ public class LogEditor : MonoBehaviour {
         instance = this;
     }
 
+    private void OnDestroy() {
+        scriptingInterface = null;
+        instance = null;
+    }
+
     private void Update() {
         CheckScrolling();
         if (scrollView.gameObject.activeSelf) {
             warningSign.SetActive(false);
         }
-    }
-
-    private void OnDestroy() {
-        scriptingInterface = null;
     }
 
     public void AddLog(string text) {

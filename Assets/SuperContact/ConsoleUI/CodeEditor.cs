@@ -16,6 +16,10 @@ public class CodeEditor : MonoBehaviour {
         instance = this;
     }
 
+    private void OnDestroy() {
+        instance = null;
+    }
+
     private void Update() {
         CheckScrolling();
     }

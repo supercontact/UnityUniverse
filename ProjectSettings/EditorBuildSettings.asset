@@ -8,7 +8,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 4c2b1790b666c384a94dec9cbc826ad8
-  - enabled: 1
-    path: Assets/Scenes/MineSweeper.unity
+  - enabled: 0
+    path: Assets/MineSweeper/MineSweeper.unity
     guid: e8c4a3c2b72af30409d01c10e9a9160f
+  - enabled: 1
+    path: Assets/3Chess/Idea.unity
+    guid: cd7bb72abd1200e4abe47b2412f5bbce
   m_configObjects: {}

@@ -1,7 +1,9 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Linq;
 using UnityEngine;
 
+[ProtoContract]
 public struct IntVector3 {
     public static IntVector3 zero = new IntVector3(0, 0, 0);
     public static IntVector3 one = new IntVector3(1, 1, 1);
@@ -22,7 +24,12 @@ public struct IntVector3 {
         new IntVector3(-1, 1, 1), new IntVector3(-1, 1, -1), new IntVector3(-1, -1, 1), new IntVector3(-1, -1, -1)};
     public static IntVector3[] allDirections = allAxialDirections.Concat(allBiaxialDirections).Concat(allTriaxialDirections).ToArray();
 
-    public int x, y, z;
+    [ProtoMember(1)]
+    public int x;
+    [ProtoMember(2)]
+    public int y;
+    [ProtoMember(3)]
+    public int z;
 
     public IntVector3(int x, int y, int z) {
         this.x = x;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,6 +23,10 @@ public class ConsoleEditor : MonoBehaviour {
         instance = this;
     }
 
+    private void OnDestroy() {
+        instance = null;
+    }
+
     private void Update() {
         CheckInputSubmit();
         CheckScrolling();
@@ -41,11 +46,12 @@ public class ConsoleEditor : MonoBehaviour {
         codeBlock.GetComponent<MainText>().text = code;
         AddBlockToConsoleArea(codeBlock);
 
-        LockConsole();
         ExecuteScriptAsync(code);
     }
 
     public async void ExecuteScriptAsync(String code) {
+        LockConsole();
+
         object result = null;
         try {
             result = await scriptingInterface.Execute(code, true /* throwException */);
@@ -76,10 +82,16 @@ public class ConsoleEditor : MonoBehaviour {
 
     public void UnlockConsole() {
         consoleInput.interactable = true;
+        consoleInput.Select();
+        consoleInput.ActivateInputField();
     }
 
     public void ScrollToBottom() {
         keepScrollingToBottom = 2;
+    }
+
+    public void SetIsAsync(bool isAsync) {
+        scriptingInterface.isAsync = isAsync;
     }
 
     private void CheckScrolling() {
