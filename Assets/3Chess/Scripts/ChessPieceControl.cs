@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class ChessPieceControl : MonoBehaviour {
 
+    public float observeChessSize = 0.7f;
+    public float highlightPlaceholderSize = 1.25f;
+
     public IntVector3 location;
     public GameObject placeholder;
     public GameObject player1Chess;
@@ -39,17 +42,17 @@ public class ChessPieceControl : MonoBehaviour {
     }
 
     public void OnPointerClick() {
-        if (currentState == 0) {
+        if (chessControl.IsMyTurn() && currentState == 0) {
             chessControl.PlaceChess(location);
         }
     }
 
     private void Update() {
-        animatedPlaceHolderSize.targetValue = chessControl.observeMode ? 0 : isHighlighted ? 1.25f : 1f;
+        animatedPlaceHolderSize.targetValue = chessControl.observeMode ? 0 : isHighlighted ? highlightPlaceholderSize : 1f;
         animatedPlaceHolderSize.Evolve(Time.deltaTime);
         placeholder.transform.localScale = Vector3.one * animatedPlaceHolderSize.value;
 
-        animatedChessSize.targetValue = chessControl.observeMode ? 0.6f : 1f;
+        animatedChessSize.targetValue = chessControl.observeMode ? observeChessSize : 1f;
         animatedChessSize.Evolve(Time.deltaTime);
         Vector3 scale = Vector3.one * animatedChessSize.value;
         player1Chess.transform.localScale = scale;

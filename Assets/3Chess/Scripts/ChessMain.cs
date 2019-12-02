@@ -20,6 +20,7 @@ public class ChessMain : MonoBehaviour {
     public GameObject startMenu;
     public InputField ipInput;
     public InputField nameInput;
+    public GameConfigUI gameConfigPanel;
     public GameObject serverWaitMessage;
     public GameObject clientWaitMessage;
 
@@ -28,6 +29,10 @@ public class ChessMain : MonoBehaviour {
 
     private Server server;
     private Client client;
+
+    private IntVector3 size;
+    private int comboLength;
+    private int scoreToWin;
 
     private void Awake() {
         int typeId = 1;
@@ -47,8 +52,14 @@ public class ChessMain : MonoBehaviour {
     }
 
     public void StartLocalPlay() {
-        chessControl.Init(ChessControl.Mode.Local, "", "", new IntVector3(3, 3, 3), 3);
         startMenu.SetActive(false);
+        gameConfigPanel.gameObject.SetActive(true);
+        gameConfigPanel.onStart += StartLocalPlayWithConfig;
+    }
+
+    private void StartLocalPlayWithConfig(IntVector3 size, int comboLength, int scoreToWin) {
+        gameConfigPanel.gameObject.SetActive(false);
+        chessControl.Init(ChessControl.Mode.Local, "", "", size, comboLength, scoreToWin);
     }
 
     public void HostGame() {
@@ -56,10 +67,19 @@ public class ChessMain : MonoBehaviour {
         if (playerName == "") {
             playerName = "Black Player";
         }
+        startMenu.SetActive(false);
+        gameConfigPanel.gameObject.SetActive(true);
+        gameConfigPanel.onStart += HostGameWithConfig;
+    }
+
+    public void HostGameWithConfig(IntVector3 size, int comboLength, int scoreToWin) {
+        this.size = size;
+        this.comboLength = comboLength;
+        this.scoreToWin = scoreToWin;
+        gameConfigPanel.gameObject.SetActive(false);
         server = new Server();
         server.onClientConnected += OnConnectedOnServer;
         server.Start(12019);
-        startMenu.SetActive(false);
         serverWaitMessage.SetActive(true);
     }
 
@@ -89,7 +109,7 @@ public class ChessMain : MonoBehaviour {
     private void OnOpponentNameRecieved(PlayerInfoRequest request) {
         opponentName = request.playerName;
         if (server != null) {
-            chessControl.Init(ChessControl.Mode.Server, playerName, opponentName, new IntVector3(3, 3, 3), 3);
+            chessControl.Init(ChessControl.Mode.Server, playerName, opponentName, size, comboLength, scoreToWin);
             ChatManager.instance.SetServer(server, playerName);
         } else {
             chessControl.Init(ChessControl.Mode.Client, playerName, opponentName);

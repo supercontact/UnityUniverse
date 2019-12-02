@@ -17,9 +17,12 @@ public class ChatDanmaku : MonoBehaviour {
     }
 
     private void Start() {
+        Canvas canvas = GetComponentInParent<Canvas>();
+        Rect canvasRect = canvas.GetComponent<RectTransform>().rect;
+
         rect = GetComponent<RectTransform>();
         size = rect.offsetMax - rect.offsetMin;
-        Vector2 startPos = new Vector2(Screen.width / 2, Random.Range(-Screen.height / 2 + size.y / 2 + marginBottom, Screen.height / 2 - size.y - marginTop));
+        Vector2 startPos = new Vector2(canvasRect.width, Random.Range(-canvasRect.height / 2 + size.y / 2 + marginBottom, canvasRect.height / 2 - size.y - marginTop));
         rect.offsetMin = new Vector2(startPos.x, startPos.y - size.y / 2);
         rect.offsetMax = new Vector2(startPos.x + size.x, startPos.y + size.y / 2);
     }
@@ -27,7 +30,7 @@ public class ChatDanmaku : MonoBehaviour {
     private void Update() {
         rect.offsetMin += Vector2.left * speed * Time.deltaTime;
         rect.offsetMax += Vector2.left * speed * Time.deltaTime;
-        if (rect.offsetMax.x < -Screen.height / 2) {
+        if (rect.offsetMax.x < 0) {
             Destroy(gameObject);
         }
     }

@@ -32,7 +32,7 @@ public class ChessClientModel : ChessModel {
 
     private void HandleServerInit(InitChessRequest request) {
         localPlayer = request.controlledPlayer;
-        Init(request.size, request.comboLength, request.firstPlayer);
+        Init(request.size, request.comboLength, request.scoreToWin, request.firstPlayer);
     }
 
     private void HandleServerReset(RestartChessRequest request) {

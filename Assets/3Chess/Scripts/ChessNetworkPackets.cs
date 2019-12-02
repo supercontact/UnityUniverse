@@ -23,14 +23,17 @@ public class InitChessRequest {
     [ProtoMember(2)]
     public int comboLength;
     [ProtoMember(3)]
-    public int controlledPlayer;
+    public int scoreToWin;
     [ProtoMember(4)]
+    public int controlledPlayer;
+    [ProtoMember(5)]
     public int firstPlayer;
 
     public InitChessRequest() { }
-    public InitChessRequest(IntVector3 size, int comboLength, int controlledPlayer, int firstPlayer) {
+    public InitChessRequest(IntVector3 size, int comboLength, int scoreToWin, int controlledPlayer, int firstPlayer) {
         this.size = size;
         this.comboLength = comboLength;
+        this.scoreToWin = scoreToWin;
         this.controlledPlayer = controlledPlayer;
         this.firstPlayer = firstPlayer;
     }

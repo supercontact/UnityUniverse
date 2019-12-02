@@ -8,6 +8,7 @@ public class ChessModel {
 
     public IntVector3 size { get; private set; }
     public int comboLength { get; private set; }
+    public int scoreToWin { get; private set; }
     public int currentPlayer { get; private set; }
     public int player1Score { get; private set; }
     public int player2Score { get; private set; }
@@ -38,10 +39,11 @@ public class ChessModel {
 
     protected int[,,] board;
    
-    public virtual void Init(IntVector3 size, int comboLength = 3, int firstPlayer = 0) {
+    public virtual void Init(IntVector3 size, int comboLength = 3, int scoreToWin = 3, int firstPlayer = 0) {
         isInitiated = true;
         this.size = size;
         this.comboLength = comboLength;
+        this.scoreToWin = scoreToWin;
         onGameInit?.Invoke();
         Reset(firstPlayer);
     }
@@ -80,7 +82,13 @@ public class ChessModel {
         SetChess(location, player);
         UpdateScore(location);
 
-        if (BoardIsFull()) {
+        if (player1Score >= scoreToWin) {
+            isFinished = true;
+            onGameFinish?.Invoke(1);
+        } else if (player2Score >= scoreToWin) {
+            isFinished = true;
+            onGameFinish?.Invoke(2);
+        } else if (BoardIsFull()) {
             isFinished = true;
             onGameFinish?.Invoke(player1Score > player2Score ? 1 : player1Score < player2Score ? 2 : 0);
         } else {

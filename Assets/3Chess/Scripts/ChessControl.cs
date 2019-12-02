@@ -38,7 +38,7 @@ public class ChessControl : MonoBehaviour {
     private Quaternion lastCameraRotation;
     private float cameraRequestTimer;
 
-    public void Init(Mode mode, string localPlayerName = "", string remotePlayerName = "", IntVector3 size = default, int comboLength = default) {
+    public void Init(Mode mode, string localPlayerName = "", string remotePlayerName = "", IntVector3 size = default, int comboLength = default, int scoreToWin = default) {
         this.mode = mode;
         if (mode == Mode.Server) {
             chessModel = new ChessServerModel(2);
@@ -69,7 +69,7 @@ public class ChessControl : MonoBehaviour {
         chessModel.onCombo += OnCombo;
 
         if (mode != Mode.Client) {
-            chessModel.Init(size, comboLength);
+            chessModel.Init(size, comboLength, scoreToWin);
         }
     }
 
