@@ -5,6 +5,8 @@ using UnityEngine;
 public class SpringValue {
 
     private static readonly float EPSILON = 0.00001f;
+    private static readonly float VALUE_STOP_THRESHOLD = 0.001f;
+    private static readonly float VELOCITY_STOP_THRESHOLD = 0.001f;
 
     public float acceleration { get; private set; }
     public float drag { get; private set; }
@@ -25,6 +27,7 @@ public class SpringValue {
     }
 
     public float Evolve(float deltaTime) {
+        if (CheckStopped()) return value;
         if (positivity == 1) {
             float c1 = (r2 * (value - targetValue) - velocity) / (r2 - r1);
             float c2 = (r1 * (value - targetValue) - velocity) / (r1 - r2);
@@ -62,5 +65,14 @@ public class SpringValue {
             r1 = -drag / 2;
             positivity = 0;
         }
+    }
+
+    private bool CheckStopped() {
+        if (Mathf.Abs(targetValue - value) < VALUE_STOP_THRESHOLD && Mathf.Abs(velocity) < VELOCITY_STOP_THRESHOLD) {
+            value = targetValue;
+            velocity = 0;
+            return true;
+        }
+        return false;
     }
 }

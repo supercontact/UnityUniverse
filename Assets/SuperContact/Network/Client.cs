@@ -32,7 +32,7 @@ public class Client {
 
         try {
             client = new TcpClient();
-            client.NoDelay = true;
+            // client.NoDelay = true;
             connectionTask = client.BeginConnect(address, port, OnConnected, null);
         } catch (SocketException e) {
             Debug.Log(e);

@@ -5,6 +5,7 @@ using UnityEngine;
 public class ChessPieceControl : MonoBehaviour {
 
     public float observeChessSize = 0.7f;
+    public float observePlaceholderSize = 0.2f;
     public float highlightPlaceholderSize = 1.25f;
 
     public IntVector3 location;
@@ -16,9 +17,9 @@ public class ChessPieceControl : MonoBehaviour {
 
     private int currentState;
     private bool isHighlighted;
-    private float comboRotationDegrees;
     private SpringValue animatedChessSize = new SpringValue(1, 500, 30);
     private SpringValue animatedPlaceHolderSize = new SpringValue(1, 1000, 75);
+    private SpringValue animatedRotationAngle = new SpringValue(0, 500, 30);
 
     public void SetState(int chessState) {
         currentState = chessState;
@@ -28,7 +29,7 @@ public class ChessPieceControl : MonoBehaviour {
     }
 
     public void ShowCombo() {
-        comboRotationDegrees = 90;
+        animatedRotationAngle.value = 90;
     }
 
     public void OnPointerEnter() {
@@ -42,13 +43,13 @@ public class ChessPieceControl : MonoBehaviour {
     }
 
     public void OnPointerClick() {
-        if (chessControl.IsMyTurn() && currentState == 0) {
+        if (chessControl.IsMyTurn() && currentState == 0 && !chessControl.observeMode) {
             chessControl.PlaceChess(location);
         }
     }
 
     private void Update() {
-        animatedPlaceHolderSize.targetValue = chessControl.observeMode ? 0 : isHighlighted ? highlightPlaceholderSize : 1f;
+        animatedPlaceHolderSize.targetValue = chessControl.observeMode ? observePlaceholderSize : isHighlighted ? highlightPlaceholderSize : 1f;
         animatedPlaceHolderSize.Evolve(Time.deltaTime);
         placeholder.transform.localScale = Vector3.one * animatedPlaceHolderSize.value;
 
@@ -58,10 +59,7 @@ public class ChessPieceControl : MonoBehaviour {
         player1Chess.transform.localScale = scale;
         player2Chess.transform.localScale = scale;
 
-        if (comboRotationDegrees > 0) {
-            comboRotationDegrees -= 180 * Time.deltaTime;
-            comboRotationDegrees = Mathf.Max(comboRotationDegrees, 0);
-            transform.rotation = Quaternion.Euler(0, comboRotationDegrees, 0);
-        }
+        animatedRotationAngle.Evolve(Time.deltaTime);
+        transform.rotation = Quaternion.Euler(0, animatedRotationAngle.value, 0);
     }
 }

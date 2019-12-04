@@ -16,7 +16,7 @@ public class ChessClientModel : ChessModel {
         client.ListenFromServer<PlaceChessRequest>(HandleServerPlaceChess);
     }
 
-    ~ChessClientModel() {
+    public override void Destroy() {
         client.UnlistenFromServer<InitChessRequest>(HandleServerInit);
         client.UnlistenFromServer<RestartChessRequest>(HandleServerReset);
         client.UnlistenFromServer<PlaceChessRequest>(HandleServerPlaceChess);

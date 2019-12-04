@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class NetworkHeader {
@@ -20,9 +22,21 @@ public class NetworkHeader {
         return new NetworkHeader(BytesToInt(buffer, 0), BytesToInt(buffer, 4));
     }
 
+    public static async Task<NetworkHeader> FromStream(Stream stream) {
+        byte[] buffer = new byte[BYTE_SIZE];
+        await stream.ReadAsync(buffer, 0, BYTE_SIZE);
+        return FromBuffer(buffer);
+    }
+
     public void ToBuffer(byte[] buffer) {
         IntToBytes(typeId, buffer, 0);
         IntToBytes(packetSize, buffer, 4);
+    }
+
+    public async Task ToStream(Stream stream) {
+        byte[] buffer = new byte[BYTE_SIZE];
+        ToBuffer(buffer);
+        await stream.WriteAsync(buffer, 0, BYTE_SIZE);
     }
 
     public override string ToString() {

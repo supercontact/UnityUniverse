@@ -47,6 +47,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e1c1d8d506126a459744c70e7321ef8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  observeChessSize: 0.7
+  observePlaceholderSize: 0.15
+  highlightPlaceholderSize: 1.25
   placeholder: {fileID: 3337132985755099555}
   player1Chess: {fileID: 1311209492583494529}
   player2Chess: {fileID: 8059016306111542403}

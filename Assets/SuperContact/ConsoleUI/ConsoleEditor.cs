@@ -102,7 +102,7 @@ public class ConsoleEditor : MonoBehaviour {
     }
 
     private void AddBlockToConsoleArea(GameObject block) {
-        block.transform.SetParent(consoleArea.transform);
+        block.transform.SetParent(consoleArea.transform, false);
         block.transform.SetSiblingIndex(consoleArea.transform.childCount - 2);
     }
 

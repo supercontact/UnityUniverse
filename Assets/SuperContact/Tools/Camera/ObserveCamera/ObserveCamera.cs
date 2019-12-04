@@ -2,7 +2,9 @@
  * Created by Ruoqi He 
  */
 
+using System;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 /// <summary>
@@ -14,6 +16,12 @@ using UnityEngine.EventSystems;
 /// Reset the camera center position by pressing the mouse middle key.
 /// </summary>
 public class ObserveCamera : MonoBehaviour {
+
+    public enum Mode {
+        NoAction,
+        Rotation,
+        Panning,
+    }
 
 	public GameObject target;
 	public CameraCenterScript center;
@@ -36,13 +44,17 @@ public class ObserveCamera : MonoBehaviour {
     public Quaternion targetRotation;
     public Vector3 targetOffset = Vector3.zero;
 
+    [Serializable]
+    public class ModeChangeUnityEvent : UnityEvent<Mode> { }
+    public ModeChangeUnityEvent onModeChange;
+
     private Camera cam;
     private FocusableInput input;
 
 	private float distance;
     private Vector3 offset = Vector3.zero;
     private Vector3 prevMousePos;
-	private int mouseMode = -1;  // 0 = rotation mode, 1 = panning mode.
+	private Mode mode = Mode.NoAction;
 
     private void Awake() {
         cam = GetComponent<Camera>();
@@ -64,12 +76,12 @@ public class ObserveCamera : MonoBehaviour {
             float mouseScrollAmount = Mathf.Clamp(input.mouseScrollDelta.y, -mouseScrollMaxTickPerFrame, mouseScrollMaxTickPerFrame);
 
             if (allowRotating && input.GetMouseButtonDown(0)) {
-				mouseMode = 0;
+                SetMode(Mode.Rotation);
 				center.Hide();
 			} else if (allowPanning && input.GetMouseButtonDown(1)) {
-				mouseMode = 1;
+                SetMode(Mode.Panning);
 				center.Show();
-			} else if (allowRotating && input.GetMouseButton(0) && mouseMode == 0) {
+			} else if (allowRotating && input.GetMouseButton(0) && mode == Mode.Rotation) {
 				// Rotate the camera.
 				Vector3 v1 = new Vector3(prevMousePos.x - Screen.width / 2, prevMousePos.y - Screen.height / 2, -mouseRotationControlDistance);
 				Vector3 v2 = new Vector3(input.mousePosition.x - Screen.width / 2, input.mousePosition.y - Screen.height / 2, -mouseRotationControlDistance);
@@ -77,7 +89,7 @@ public class ObserveCamera : MonoBehaviour {
 				rotation.ToAngleAxis(out float angle, out Vector3 axis);
 				rotation = Quaternion.AngleAxis(angle * mouseRotationFactor, axis);
 				targetRotation = targetRotation * rotation;
-			} else if (allowPanning && input.GetMouseButton(1) && mouseMode == 1) {
+			} else if (allowPanning && input.GetMouseButton(1) && mode == Mode.Panning) {
 				// Pan the camera.
 				float distancePixelRatio = (cam.ScreenToWorldPoint(new Vector3(1, 0, targetDistance)) - cam.ScreenToWorldPoint(new Vector3(0, 0, targetDistance))).magnitude * mousePanningFactor;
 				Vector3 move = new Vector3((prevMousePos.x - input.mousePosition.x) * distancePixelRatio,
@@ -85,11 +97,11 @@ public class ObserveCamera : MonoBehaviour {
                                            mouseScrollAmount * targetDistance * mouseScrollMovingFactor);
 				targetOffset += targetRotation * move;
 			} else {
-				mouseMode = -1;
+                SetMode(Mode.NoAction);
                 center.Hide();
             }
 
-			if (allowZooming && mouseMode != 1) {
+			if (allowZooming && mode != Mode.Panning) {
                 // Zoom the camera.
 				targetDistance *= Mathf.Exp(-mouseScrollAmount * mouseScrollZoomingFactor);
 			}
@@ -112,11 +124,10 @@ public class ObserveCamera : MonoBehaviour {
         }
 	}
 
-    //public void OnClick(BaseEventData data) {
-    //    if (directMouseInput) {
-    //        throw new System.Exception("Direct mouse input mode is in use!");
-    //    }
-    //    PointerEventData pdata = (PointerEventData)data;
-    //    clicking = pdata.button == PointerEventData.InputButton.Left;
-    //}
+    private void SetMode(Mode mode) {
+        if (this.mode != mode) {
+            this.mode = mode;
+            onModeChange?.Invoke(mode);
+        }
+    }
 }

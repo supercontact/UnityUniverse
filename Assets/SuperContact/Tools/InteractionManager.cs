@@ -16,6 +16,7 @@ public class InteractionManager : MonoBehaviour {
 
     private void Update() {
         InteractableObject interactable = null;
+        bool rayHit = false;
         Vector3 worldPos = Vector3.zero;
 
         // Raycast UI
@@ -25,13 +26,14 @@ public class InteractionManager : MonoBehaviour {
             var results = new List<RaycastResult>();
             graphicRaycaster.Raycast(clickEvent, results);
             if (results.Count > 0) {
+                rayHit = true;
                 interactable = results[0].gameObject?.GetComponentInParent<InteractableObject>();
                 worldPos = results[0].worldPosition;
             }
         }
 
         // Raycast 3D Graphics
-        if (interactable == null && raycast3DGraphics) {
+        if (!rayHit && raycast3DGraphics) {
             Ray ray = currentCamera.ScreenPointToRay(Input.mousePosition);
             Physics.Raycast(ray, out RaycastHit hitInfo);
             interactable = hitInfo.collider?.GetComponentInParent<InteractableObject>();

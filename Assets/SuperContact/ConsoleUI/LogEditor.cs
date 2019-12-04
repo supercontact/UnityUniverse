@@ -60,7 +60,7 @@ public class LogEditor : MonoBehaviour {
 
         GameObject block = Instantiate(blockPrefab);
         block.GetComponent<MainText>().text = text.ToString();
-        block.transform.SetParent(logArea.transform);
+        block.transform.SetParent(logArea.transform, false);
 
         if (atButton) {
             ScrollToBottom();

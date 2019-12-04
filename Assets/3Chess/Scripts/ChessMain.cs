@@ -7,12 +7,15 @@ using UnityEngine.UI;
 
 public class ChessMain : MonoBehaviour {
 
+    public static ChessMain instance;
+
     private readonly List<Type> packetTypes = new List<Type> {
         typeof(PlayerInfoRequest),
         typeof(InitChessRequest),
         typeof(RestartChessRequest),
         typeof(PlaceChessRequest),
         typeof(ObserveCameraControlRequest),
+        typeof(GuideLineDisplayRequest),
         typeof(ObserveModeRequest),
     };
 
@@ -35,20 +38,24 @@ public class ChessMain : MonoBehaviour {
     private int scoreToWin;
 
     private void Awake() {
+        instance = this;
+
         int typeId = 1;
         foreach (Type packetType in packetTypes) {
             NetworkRegistry.packetTypeById.Add(typeId++, packetType);
         }
-        AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
     }
 
     private void OnDestroy() {
+        instance = null;
+
         NetworkRegistry.packetTypeById.Clear();
-        AppDomain.CurrentDomain.UnhandledException -= OnUnhandledException;
     }
 
-    private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e) {
-        Debug.Log(e.ExceptionObject.ToString());
+    private void Update() {
+        if (Input.GetKeyDown(KeyCode.Escape)) {
+            Application.Quit();
+        }
     }
 
     public void StartLocalPlay() {
@@ -59,6 +66,7 @@ public class ChessMain : MonoBehaviour {
 
     private void StartLocalPlayWithConfig(IntVector3 size, int comboLength, int scoreToWin) {
         gameConfigPanel.gameObject.SetActive(false);
+        gameConfigPanel.onStart -= StartLocalPlayWithConfig;
         chessControl.Init(ChessControl.Mode.Local, "", "", size, comboLength, scoreToWin);
     }
 
@@ -77,6 +85,7 @@ public class ChessMain : MonoBehaviour {
         this.comboLength = comboLength;
         this.scoreToWin = scoreToWin;
         gameConfigPanel.gameObject.SetActive(false);
+        gameConfigPanel.onStart -= HostGameWithConfig;
         server = new Server();
         server.onClientConnected += OnConnectedOnServer;
         server.Start(12019);
@@ -94,6 +103,22 @@ public class ChessMain : MonoBehaviour {
         client.Connect(ip, 12019);
         startMenu.SetActive(false);
         clientWaitMessage.SetActive(true);
+    }
+
+    public void Reconfigure() {
+        if (gameConfigPanel.gameObject.activeSelf) {
+            gameConfigPanel.gameObject.SetActive(false);
+            gameConfigPanel.onStart -= ReconfigureWithConfig;
+        } else {
+            gameConfigPanel.gameObject.SetActive(true);
+            gameConfigPanel.onStart += ReconfigureWithConfig;
+        }
+    } 
+
+    public void ReconfigureWithConfig(IntVector3 size, int comboLength, int scoreToWin) {
+        gameConfigPanel.gameObject.SetActive(false);
+        gameConfigPanel.onStart -= ReconfigureWithConfig;
+        chessControl.Init(chessControl.mode, playerName, opponentName, size, comboLength, scoreToWin);
     }
 
     private void OnConnectedOnServer(int clientId) {

@@ -88,6 +88,18 @@ public class ObserveCameraControlRequest {
 }
 
 [ProtoContract]
+public class GuideLineDisplayRequest {
+
+    [ProtoMember(1)]
+    public bool isOn;
+
+    public GuideLineDisplayRequest() { }
+    public GuideLineDisplayRequest(bool isOn) {
+        this.isOn = isOn;
+    }
+}
+
+[ProtoContract]
 public class ObserveModeRequest {
 
     [ProtoMember(1)]

@@ -18,13 +18,13 @@ public class ChessServerModel : ChessModel {
         server.ListenFromClient<PlaceChessRequest>(clientId, HandleClientPlaceChess);
     }
 
-    ~ChessServerModel() {
-        server.UnlistenFromClient<PlaceChessRequest>(clientId, HandleClientPlaceChess);
-    }
-
     public override void Init(IntVector3 size, int comboLength = 3, int scoreToWin = 3, int firstPlayer = 0) {
         base.Init(size, comboLength, scoreToWin, firstPlayer);
         server.SendToClient(clientId, new InitChessRequest(size, comboLength, scoreToWin, opponentPlayer, currentPlayer));
+    }
+
+    public override void Destroy() {
+        server.UnlistenFromClient<PlaceChessRequest>(clientId, HandleClientPlaceChess);
     }
 
     public override void Restart(int firstPlayer = 0) {

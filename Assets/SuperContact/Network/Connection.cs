@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using ProtoBuf;
 using Wintellect.PowerCollections;
 
@@ -16,8 +17,11 @@ public class Connection {
     private TcpClient client;
     private NetworkStream stream;
 
-    private byte[] readBuffer;
     private byte[] writeBuffer;
+    private byte[] readBuffer;
+    private bool isWriting;
+    private ConcurrentQueue<KeyValuePair<int, object>> writeObjectQueue = new ConcurrentQueue<KeyValuePair<int, object>>();
+    private int readStartsAt = 0;
     private MultiDictionary<Type, Action<object>> readListeners = new MultiDictionary<Type, Action<object>>(false);
     private Dictionary<object, Action<object>> actionMap = new Dictionary<object, Action<object>>();
     private ConcurrentDictionary<Type, ConcurrentQueue<object>> unhandledPackets = new ConcurrentDictionary<Type, ConcurrentQueue<object>>();
@@ -45,19 +49,40 @@ public class Connection {
     }
 
     public void Send(int typeId, object obj) {
+        writeObjectQueue.Enqueue(new KeyValuePair<int, object>(typeId, obj));
+
+        if (!isWriting) {
+            WriteQueuedPackets();
+        }
+    }
+
+    private void WriteQueuedPackets() {
+        isWriting = true;
+        if (!writeObjectQueue.TryDequeue(out KeyValuePair<int, object> packet)) return;
+
         using (MemoryStream memoryStream = new MemoryStream(writeBuffer, NetworkHeader.BYTE_SIZE, WRITE_BUFFER_SIZE - NetworkHeader.BYTE_SIZE)) {
-            Serializer.NonGeneric.Serialize(memoryStream, obj);
+            Serializer.NonGeneric.Serialize(memoryStream, packet.Value);
             int packetSize = (int)memoryStream.Position;
-            NetworkHeader header = new NetworkHeader(typeId, packetSize);
+            NetworkHeader header = new NetworkHeader(packet.Key, packetSize);
             header.ToBuffer(writeBuffer);
-            Logging.Log($"Writting a [{typeId}]{NetworkRegistry.packetTypeById[typeId]} of size {packetSize}...");
-            stream.BeginWrite(writeBuffer, 0, NetworkHeader.BYTE_SIZE + packetSize, OnWrite, null);
+            //Logging.Log($"Writting a [{typeId}]{NetworkRegistry.packetTypeById[typeId]} of size {packetSize}...");
+            try {
+                stream.BeginWrite(writeBuffer, 0, NetworkHeader.BYTE_SIZE + packetSize, OnWrite, null);
+            } catch (Exception e) {
+                Logging.LogError(e);
+                throw e;
+            }
         }
     }
 
     private void OnWrite(IAsyncResult asyncResult) {
         stream.EndWrite(asyncResult);
-        Logging.Log("Network write done!");
+        if (writeObjectQueue.Count > 0) {
+            WriteQueuedPackets();
+        } else {
+            isWriting = false;
+        }
+        //Logging.Log("Network write done!");
     }
 
     public void Listen<T>(Action<T> listener) {
@@ -99,32 +124,78 @@ public class Connection {
     }
 
     public void Read() {
-        stream.BeginRead(readBuffer, 0, NetworkHeader.BYTE_SIZE, OnReadHeader, null);
+        readStartsAt = 0;
+        try {
+            stream.BeginRead(readBuffer, 0, NetworkHeader.BYTE_SIZE, OnReadHeader, null);
+        } catch (Exception e) {
+            Logging.LogError(e);
+            throw e;
+        }
     }
 
     private void OnReadHeader(IAsyncResult asyncResult) {
         int numberOfBytesRead = stream.EndRead(asyncResult);
-        if (numberOfBytesRead < NetworkHeader.BYTE_SIZE) {
-            throw new Exception("Error when reading packet header!");
+        if (numberOfBytesRead == 0) {
+            ConnectionEnded();
+            return;
+        }
+        if (readStartsAt + numberOfBytesRead < NetworkHeader.BYTE_SIZE) {
+            readStartsAt += numberOfBytesRead;
+            try {
+                stream.BeginRead(readBuffer, readStartsAt, NetworkHeader.BYTE_SIZE - readStartsAt, OnReadHeader, null);
+            } catch (Exception e) {
+                Logging.LogError(e);
+                throw e;
+            }
+            return;
         }
         NetworkHeader header = NetworkHeader.FromBuffer(readBuffer);
-        if (header.packetSize > READ_BUFFER_SIZE - NetworkHeader.BYTE_SIZE) {
-            throw new Exception("Packet is too big!");
+        if (header.packetSize > READ_BUFFER_SIZE) {
+            Logging.LogError($"Packet is too big! Header: {header}");
+            throw new Exception($"Packet is too big! Header: {header}");
         }
-        Logging.Log($"Header read, packet size is {header.packetSize} bytes.");
+        //Logging.Log($"Header read, packet size is {header.packetSize} bytes.");
         if (header.packetSize == 0) {
-            ExtractProtoFromReadBuffer(header);
+            try {
+                ExtractProtoFromReadBuffer(header);
+            } catch (Exception e) {
+                Logging.LogError(e);
+            }
             Read();
         } else {
-            stream.BeginRead(readBuffer, 0, header.packetSize, OnReadPacket, header);
+            readStartsAt = 0;
+            try {
+                stream.BeginRead(readBuffer, 0, header.packetSize, OnReadPacket, header);
+            } catch (Exception e) {
+                Logging.LogError(e);
+                throw e;
+            }
         }
     }
 
     private void OnReadPacket(IAsyncResult asyncResult) {
         int numberOfBytesRead = stream.EndRead(asyncResult);
+        if (numberOfBytesRead == 0) {
+            ConnectionEnded();
+            return;
+        }
         NetworkHeader header = (NetworkHeader)asyncResult.AsyncState;
-        Logging.Log($"Packet bytes read with size = {numberOfBytesRead}. Now deserializing as [{header.typeId}]{NetworkRegistry.packetTypeById[header.typeId]}.");
-        ExtractProtoFromReadBuffer(header);
+        if (readStartsAt + numberOfBytesRead < header.packetSize) {
+            readStartsAt += numberOfBytesRead;
+            try {
+                stream.BeginRead(readBuffer, readStartsAt, header.packetSize - readStartsAt, OnReadHeader, header);
+            } catch (Exception e) {
+                Logging.LogError(e);
+                throw e;
+            }
+            return;
+        }
+        //Logging.Log($"Packet bytes read with size = {numberOfBytesRead}. Now deserializing as [{header.typeId}]{NetworkRegistry.packetTypeById[header.typeId]}.");
+        try {
+            ExtractProtoFromReadBuffer(header);
+        } catch (Exception e) {
+            Logging.LogError(e);
+        }
         Read();
     }
 
@@ -132,14 +203,14 @@ public class Connection {
         Type type = NetworkRegistry.packetTypeById[header.typeId];
         using (MemoryStream memoryStream = new MemoryStream(readBuffer, 0, header.packetSize)) {
             var obj = Serializer.Deserialize(type, memoryStream);
-            Logging.Log("Packet deserialized: " + obj.ToString());
+            //Logging.Log("Packet deserialized: " + obj.ToString());
 
             if (readListeners.ContainsKey(type)) {
                 foreach (Action<object> listener in readListeners[type]) {
                     NetworkManager.GetInstance().QueueAction(listener, obj);
                 }
             } else {
-                Logging.Log($"No listener registered for packet type {type}! Adding to unhandled queue.");
+                Logging.LogWarning($"No listener registered for packet type {type}! Adding to unhandled queue.");
                 unhandledPackets.AddOrUpdate(
                     type,
                     (Type key) => {
@@ -149,7 +220,7 @@ public class Connection {
                     },
                     (Type key, ConcurrentQueue<object> existingQueue) => {
                         while (existingQueue.Count >= UNHANLDED_PACKET_QUEUE_LENGTH) {
-                            Logging.Log("Unhandled queue full! Dropping packet.");
+                            Logging.LogWarning("Unhandled queue full! Dropping packet.");
                             existingQueue.TryDequeue(out object discardedPacket);
                         }
                         existingQueue.Enqueue(obj);
@@ -157,5 +228,10 @@ public class Connection {
                     });
             }
         }
+    }
+
+    private void ConnectionEnded() {
+        // Event
+        Logging.LogWarning("Connection ended!");
     }
 }

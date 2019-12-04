@@ -106,7 +106,7 @@ public class Server {
     private void OnClientConnected(IAsyncResult asyncResult) {
         // Handle error
         TcpClient client = server.EndAcceptTcpClient(asyncResult);
-        client.NoDelay = true;
+        // client.NoDelay = true;
         int clientId = nextClientId++;
         clientListeningTask = null;
         clientConnections[clientId] = new Connection(client, clientId);

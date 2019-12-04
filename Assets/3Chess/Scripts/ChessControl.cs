@@ -25,6 +25,7 @@ public class ChessControl : MonoBehaviour {
     public Text player2Congratulation;
     public Text drawMessage;
     public ObserveCamera mainCamera;
+    public GuideLine guideLine;
 
     public ChessModel chessModel;
     public bool observeMode;
@@ -39,6 +40,8 @@ public class ChessControl : MonoBehaviour {
     private float cameraRequestTimer;
 
     public void Init(Mode mode, string localPlayerName = "", string remotePlayerName = "", IntVector3 size = default, int comboLength = default, int scoreToWin = default) {
+        ClearModel();
+
         this.mode = mode;
         if (mode == Mode.Server) {
             chessModel = new ChessServerModel(2);
@@ -93,7 +96,21 @@ public class ChessControl : MonoBehaviour {
         }
     }
 
-    private void Clear() {
+    private void ClearModel() {
+        if (chessModel == null) return;
+
+        chessModel.onGameInit -= OnGameInit;
+        chessModel.onGameStart -= OnGameStart;
+        chessModel.onGameFinish -= OnGameFinish;
+        chessModel.onNextTurn -= OnNextTurn;
+        chessModel.onChessStateChange -= OnChessStateChange;
+        chessModel.onPlayerScoreChange -= OnPlayerScoreChange;
+        chessModel.onCombo -= OnCombo;
+        chessModel.Destroy();
+        chessModel = null;  
+    }
+
+    private void ClearGameObjects() {
         if (chessPieces != null) {
             foreach (ChessPieceControl chessPiece in chessPieces) {
                 Destroy(chessPiece.gameObject);
@@ -123,7 +140,7 @@ public class ChessControl : MonoBehaviour {
     }
 
     private void OnGameInit() {
-        Clear();
+        ClearGameObjects();
 
         IntVector3 size = chessModel.size;
         chessPieces = new ChessPieceControl[size.x, size.y, size.z];
@@ -136,6 +153,9 @@ public class ChessControl : MonoBehaviour {
             chessPiece.location = location;
             chessPiece.chessControl = this;
         }
+        guideLine.gameObject.SetActive(true);
+        guideLine.transform.localScale = Vector3.one * chessGap * Mathf.Max(size.x, size.y, size.z) / 5;
+        guideLine.Init(opponent);
     }
 
     private void OnGameStart(int firstPlayer) {
@@ -152,19 +172,18 @@ public class ChessControl : MonoBehaviour {
         drawMessage.gameObject.SetActive(playerWon == 0);
         mainCamera.allowRotating = true;
         mainCamera.allowZooming = true;
+        guideLine.controlsOther = false;
     }
 
     private void OnNextTurn(int nextPlayer) {
         player1sTurnMessage.gameObject.SetActive(nextPlayer == 1);
         player2sTurnMessage.gameObject.SetActive(nextPlayer == 2);
-        if (IsMyTurn()) {
-            mainCamera.allowRotating = true;
-            mainCamera.allowZooming = true;
-        } else {
+        if (!IsMyTurn()) {
             observeMode = false;
-            mainCamera.allowRotating = false;
-            mainCamera.allowZooming = false;
         }
+        mainCamera.allowRotating = IsMyTurn();
+        mainCamera.allowZooming = IsMyTurn();
+        guideLine.controlsOther = IsMyTurn();
     }
 
     private void OnChessStateChange(IntVector3 location, int newChessState) {
@@ -203,6 +222,9 @@ public class ChessControl : MonoBehaviour {
         if (chessModel != null && chessModel.isInitiated && input.GetKeyDown(KeyCode.R)) {
             Restart();
         }
+        if (chessModel != null && chessModel.isInitiated && input.GetKeyDown(KeyCode.Q) && mode != Mode.Client) {
+            ChessMain.instance.Reconfigure();
+        }
         if (HasFreeControl()) {
             bool nextObserveMode = input.GetKey(KeyCode.Space);
             if (nextObserveMode != observeMode) {
@@ -224,6 +246,6 @@ public class ChessControl : MonoBehaviour {
     }
 
     private void OnDestroy() {
-        Clear();
+        ClearGameObjects();
     }
 }

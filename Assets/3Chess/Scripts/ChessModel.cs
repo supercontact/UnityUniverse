@@ -48,6 +48,8 @@ public class ChessModel {
         Reset(firstPlayer);
     }
 
+    public virtual void Destroy() { }
+
     public virtual void Restart(int firstPlayer = 0) {
         Reset(firstPlayer);
     }
